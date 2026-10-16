@@ -147,7 +147,7 @@ export function parseBankStatementCsv(csvText: string): {
 }
 
 /**
- * Generates downloadable CSV template content for users.
+ * Generates downloadable CSV template content with at least 100 realistic mock records.
  */
 export function generateSampleCsvTemplate(): string {
   const headers = [
@@ -166,53 +166,196 @@ export function generateSampleCsvTemplate(): string {
     'IP_Address'
   ];
 
-  const rows = [
-    [
-      'TXN_SAMPLE_001',
-      new Date(Date.now() - 3600000 * 2).toISOString(),
-      'rahul.sharma@okaxis',
-      'Rahul Sharma',
-      'chaiwala.tapri@paytm',
-      'Sharma Tea Stall',
-      '30',
-      'UPI_P2M',
-      '5499',
-      'Food & Beverages',
-      'Mumbai',
-      'DVM_ARM64_OEM_PIXEL8_VERIFIED',
-      '103.21.124.8'
-    ],
-    [
-      'TXN_SAMPLE_002',
-      new Date(Date.now() - 3600000).toISOString(),
-      'rahul.sharma@okaxis',
-      'Rahul Sharma',
-      'swiggy.orders@icici',
-      'Swiggy India',
-      '480',
-      'UPI_P2M',
-      '5812',
-      'Online Food Delivery',
-      'Mumbai',
-      'DVM_ARM64_OEM_PIXEL8_VERIFIED',
-      '103.21.124.8'
-    ],
-    [
-      'TXN_SAMPLE_003',
-      new Date().toISOString(),
-      'rahul.sharma@okaxis',
-      'Rahul Sharma',
-      'vip.bet99.laund@muleupi',
-      'Bet99 Gaming Escrow',
-      '75000',
-      'UPI_P2P',
-      '7995',
-      'Online Gambling & Betting',
-      'London',
-      'ROOTED_GENYMOTION_EMULATOR_FAIL',
-      '185.220.101.5'
-    ]
+  const merchants = [
+    { name: 'Chai Point / Local Tea Stall', vpa: 'chaipoint.mum@paytm', mcc: '5499', cat: 'Fast Food & Beverages', base: 40, city: 'Mumbai' },
+    { name: 'Swiggy Online Food', vpa: 'swiggy.orders@icici', mcc: '5812', cat: 'Online Food Delivery', base: 450, city: 'Mumbai' },
+    { name: 'Zomato Limited', vpa: 'zomato.pay@hdfcbank', mcc: '5812', cat: 'Online Food Delivery', base: 520, city: 'Mumbai' },
+    { name: 'Blinkit Instant Commerce', vpa: 'blinkit.groceries@kotak', mcc: '5411', cat: 'Supermarket & Groceries', base: 850, city: 'Mumbai' },
+    { name: 'Zepto Quick Grocery', vpa: 'zepto.mum@axisbank', mcc: '5411', cat: 'Supermarket & Groceries', base: 620, city: 'Mumbai' },
+    { name: 'Adani Electricity Mumbai', vpa: 'adanipower.mum@sbi', mcc: '4900', cat: 'Utilities / Power', base: 2450, city: 'Mumbai' },
+    { name: 'Airtel Fiber Broadband', vpa: 'airtel.bills@airtelbank', mcc: '4814', cat: 'Telecommunication', base: 1179, city: 'Mumbai' },
+    { name: 'Uber Rides India', vpa: 'uber.india@icici', mcc: '4121', cat: 'Taxicabs & Rideshare', base: 340, city: 'Mumbai' },
+    { name: 'Ola Cabs Transit', vpa: 'olacabs@axisbank', mcc: '4121', cat: 'Taxicabs & Rideshare', base: 280, city: 'Mumbai' },
+    { name: 'Indian Oil Fuel Pump', vpa: 'indianoil.andheri@sbi', mcc: '5541', cat: 'Service Stations / Fuel', base: 1500, city: 'Mumbai' },
+    { name: 'Shell Fuel Station', vpa: 'shell.retail@hdfcbank', mcc: '5541', cat: 'Service Stations / Fuel', base: 2200, city: 'Mumbai' },
+    { name: 'Apollo Pharmacy Bandra', vpa: 'apollopharmacy@axisbank', mcc: '5912', cat: 'Pharmacies & Drugs', base: 680, city: 'Mumbai' },
+    { name: 'MedPlus Chemist', vpa: 'medplus.mum@icici', mcc: '5912', cat: 'Pharmacies & Drugs', base: 420, city: 'Mumbai' },
+    { name: 'Decathlon Sports Andheri', vpa: 'decathlon.andheri@hdfcbank', mcc: '5941', cat: 'Sporting Goods', base: 3400, city: 'Mumbai' },
+    { name: 'Amazon India Shopping', vpa: 'amazonpay.retail@axisbank', mcc: '5311', cat: 'Department Stores / E-Commerce', base: 1890, city: 'Mumbai' },
+    { name: 'Flipkart Internet Retail', vpa: 'flipkart.orders@kotak', mcc: '5311', cat: 'Department Stores / E-Commerce', base: 2150, city: 'Mumbai' },
+    { name: 'Priya Verma (P2P Split)', vpa: 'priya.verma@okhdfcbank', mcc: '0000', cat: 'Peer-to-Peer Transfer', base: 1200, city: 'Mumbai' },
+    { name: 'Amitabh Sen (Dinner Split)', vpa: 'amitabh.sen@okaxis', mcc: '0000', cat: 'Peer-to-Peer Transfer', base: 850, city: 'Mumbai' },
+    { name: 'Starbucks Coffee Bandra', vpa: 'starbucks.india@icici', mcc: '5814', cat: 'Fast Food Restaurants', base: 560, city: 'Mumbai' },
+    { name: 'D-Mart Supermarket Goregaon', vpa: 'dmart.goregaon@hdfcbank', mcc: '5411', cat: 'Supermarket & Groceries', base: 4200, city: 'Mumbai' }
   ];
 
+  const senderVpa = 'rahul.sharma@okaxis';
+  const senderName = 'Rahul Sharma';
+  const normalDevice = 'DVM_ARM64_OEM_PIXEL8_VERIFIED';
+  const normalIp = '103.21.124.8';
+
+  const rows: string[][] = [];
+  const baseTimestamp = Date.now() - 15 * 24 * 3600 * 1000; // 15 days ago
+
+  // 1. Generate 90 Authentic Daily Transactions
+  for (let i = 1; i <= 90; i++) {
+    const m = merchants[(i - 1) % merchants.length];
+    const txnTime = new Date(baseTimestamp + i * 3.8 * 3600 * 1000).toISOString();
+    // Deterministic variance around base price
+    const amount = Math.max(20, Math.round(m.base * (0.8 + ((i * 17) % 50) / 100)));
+    const channel = m.mcc === '0000' ? 'UPI_P2P' : 'UPI_P2M';
+
+    rows.push([
+      `TXN_TEMPLATE_${String(i).padStart(3, '0')}`,
+      txnTime,
+      senderVpa,
+      senderName,
+      m.vpa,
+      m.name,
+      amount.toString(),
+      channel,
+      m.mcc,
+      m.cat,
+      m.city,
+      normalDevice,
+      normalIp
+    ]);
+  }
+
+  // 2. Add 3 Rapid Velocity Burst Transactions (< 60s window)
+  const burstTime = Date.now() - 2 * 24 * 3600 * 1000 + 14 * 3600 * 1000;
+  for (let b = 1; b <= 3; b++) {
+    rows.push([
+      `TXN_TEMPLATE_BURST_${b}`,
+      new Date(burstTime + b * 9000).toISOString(),
+      senderVpa,
+      senderName,
+      `unknown.merchant_${b}@paytm`,
+      `Rapid Automated Node #${b}`,
+      '18500',
+      'UPI_P2M',
+      '5999',
+      'Miscellaneous Retail',
+      'Mumbai',
+      'ROOTED_GENYMOTION_EMULATOR_FAIL',
+      '185.220.101.5'
+    ]);
+  }
+
+  // 3. Add 2 Impossible Travel (Geo-Drift) Transactions
+  const geoTime = Date.now() - 1 * 24 * 3600 * 1000 + 18 * 3600 * 1000;
+  rows.push([
+    'TXN_TEMPLATE_GEO_01',
+    new Date(geoTime).toISOString(),
+    senderVpa,
+    senderName,
+    'swiggy.orders@icici',
+    'Swiggy Bandra Mumbai',
+    '650',
+    'UPI_P2M',
+    '5812',
+    'Online Food Delivery',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+  rows.push([
+    'TXN_TEMPLATE_GEO_02',
+    new Date(geoTime + 12 * 60 * 1000).toISOString(), // 12 mins later
+    senderVpa,
+    senderName,
+    'harrods.luxury@barclays',
+    'Harrods London Dept Store',
+    '89000',
+    'NET_BANKING',
+    '5311',
+    'Department Stores (International)',
+    'London',
+    'LINUX_HEADLESS_CHROME_SPOOF',
+    '82.165.197.1'
+  ]);
+
+  // 4. Add 2 High-Risk MCC Online Gambling / Betting Transactions (MCC 7995)
+  rows.push([
+    'TXN_TEMPLATE_MCC_01',
+    new Date(Date.now() - 36 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'bet99.casino.cashout@upi',
+    'Bet99 Offshore Gaming Portal',
+    '65000',
+    'UPI_P2M',
+    '7995',
+    'Online Gambling & Betting',
+    'Goa',
+    'EMULATOR_BLUESTACKS_MAC_CLONE',
+    '104.244.42.1'
+  ]);
+  rows.push([
+    'TXN_TEMPLATE_MCC_02',
+    new Date(Date.now() - 34 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'cryptomixer.instant.pay@okaxis',
+    'P2P Quasi-Cash Liquidation',
+    '52000',
+    'UPI_P2P',
+    '6051',
+    'Quasi-Cash / Crypto Mixers',
+    'Mumbai',
+    normalDevice,
+    '103.21.124.8'
+  ]);
+
+  // 5. Add 2 Mule Account Syndicate Funnel Transactions
+  rows.push([
+    'TXN_TEMPLATE_MULE_01',
+    new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'mule.escrow.syndicate_1@ybl',
+    'Syndicate Liquidation Mule #1',
+    '49500',
+    'UPI_P2P',
+    '6011',
+    'Quasi-Cash / ATM Drain',
+    'Delhi',
+    'ROOTED_ONEPLUS_OX_SPOOF',
+    '185.100.87.2'
+  ]);
+  rows.push([
+    'TXN_TEMPLATE_MULE_02',
+    new Date(Date.now() - 11 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'mule.cashout.shell@paytm',
+    'Shell Account Liquidation Endpoint',
+    '48000',
+    'UPI_P2P',
+    '6011',
+    'Quasi-Cash / ATM Drain',
+    'Delhi',
+    'ROOTED_ONEPLUS_OX_SPOOF',
+    '185.100.87.2'
+  ]);
+
+  // 6. Add 1 Suspicious Late-Night High-Value Transfer
+  rows.push([
+    'TXN_TEMPLATE_SUSPICIOUS_01',
+    new Date(Date.now() - 5 * 3600 * 1000).toISOString(), // 3:30 AM
+    senderVpa,
+    senderName,
+    'firsttime.recipient.unverified@sbi',
+    'Rameshwar Yadav (First Time Recipient)',
+    '34000',
+    'UPI_P2P',
+    '0000',
+    'Peer-to-Peer Transfer',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  // Total rows = 90 + 3 + 2 + 2 + 2 + 1 = exactly 100 records!
   return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
 }
