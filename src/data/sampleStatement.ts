@@ -28,7 +28,7 @@ export function generate250SampleTransactions(): StatementTransaction[] {
   ];
 
   let currentTimestamp = baseTime;
-  const normalDevice = 'DVM_ARM64_OEM_PIXEL8_VERIFIED';
+  const normalDevice = 'OEM_ARM64_PIXEL8_VERIFIED';
   const normalIp = '103.21.124.8';
 
   // 1. Generate 236 Authentic Daily Transactions over 30 days (250 total with injected fraud scenarios)

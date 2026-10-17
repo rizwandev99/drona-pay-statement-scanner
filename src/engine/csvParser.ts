@@ -39,7 +39,7 @@ function normalizeHeader(header: string): string {
   if (/^(sendername|fromname|payername)$/.test(cleaned)) return 'senderName';
   if (/^(receivervpa|receiver|tovpa|toupi|beneficiaryvpa|beneficiary|payeename)$/.test(cleaned)) return 'receiverVpa';
   if (/^(receivername|toname|beneficiaryname|merchantname)$/.test(cleaned)) return 'receiverName';
-  if (/^(amount|txnamount|debitamount|inr|value)$/.test(cleaned)) return 'amount';
+  if (/^(amount|txnamount|debitamount|inr|value|amountinr)$/.test(cleaned)) return 'amount';
   if (/^(channel|type|paymentmode|mode)$/.test(cleaned)) return 'channel';
   if (/^(mcc|merchantcode)$/.test(cleaned)) return 'mcc';
   if (/^(mcccategory|category|purposename|merchanttype)$/.test(cleaned)) return 'mccCategory';
@@ -120,7 +120,7 @@ export function parseBankStatementCsv(csvText: string): {
     const lat = rowObj['lat'] ? parseFloat(rowObj['lat']) : cityLookup.lat;
     const lon = rowObj['lon'] ? parseFloat(rowObj['lon']) : cityLookup.lon;
 
-    const deviceFingerprint = rowObj['deviceFingerprint'] || 'DVM_ARM64_OEM_SAMSUNG_A54_HASH9182';
+    const deviceFingerprint = rowObj['deviceFingerprint'] || 'OEM_ARM64_SAMSUNG_A54_VERIFIED';
     const ipAddress = rowObj['ipAddress'] || '49.207.210.45';
 
     transactions.push({
@@ -191,16 +191,16 @@ export function generateSampleCsvTemplate(): string {
 
   const senderVpa = 'rahul.sharma@okaxis';
   const senderName = 'Rahul Sharma';
-  const normalDevice = 'DVM_ARM64_OEM_PIXEL8_VERIFIED';
+  const normalDevice = 'OEM_ARM64_PIXEL8_VERIFIED';
   const normalIp = '103.21.124.8';
 
   const rows: string[][] = [];
   const baseTimestamp = Date.now() - 15 * 24 * 3600 * 1000; // 15 days ago
 
-  // 1. Generate 90 Authentic Daily Transactions
-  for (let i = 1; i <= 90; i++) {
+  // 1. Generate 85 Authentic Everyday Transactions (Verdict: SAFE - Green)
+  for (let i = 1; i <= 85; i++) {
     const m = merchants[(i - 1) % merchants.length];
-    const txnTime = new Date(baseTimestamp + i * 3.8 * 3600 * 1000).toISOString();
+    const txnTime = new Date(baseTimestamp + i * 4 * 3600 * 1000).toISOString();
     // Deterministic variance around base price
     const amount = Math.max(20, Math.round(m.base * (0.8 + ((i * 17) % 50) / 100)));
     const channel = m.mcc === '0000' ? 'UPI_P2P' : 'UPI_P2M';
@@ -222,46 +222,201 @@ export function generateSampleCsvTemplate(): string {
     ]);
   }
 
-  // 2. Add 3 Rapid Velocity Burst Transactions (< 60s window)
-  const burstTime = Date.now() - 2 * 24 * 3600 * 1000 + 14 * 3600 * 1000;
-  for (let b = 1; b <= 3; b++) {
-    rows.push([
-      `TXN_TEMPLATE_BURST_${b}`,
-      new Date(burstTime + b * 9000).toISOString(),
-      senderVpa,
-      senderName,
-      `unknown.merchant_${b}@paytm`,
-      `Rapid Automated Node #${b}`,
-      '18500',
-      'UPI_P2M',
-      '5999',
-      'Miscellaneous Retail',
-      'Mumbai',
-      'ROOTED_GENYMOTION_EMULATOR_FAIL',
-      '185.220.101.5'
-    ]);
-  }
-
-  // 3. Add 2 Impossible Travel (Geo-Drift) Transactions
-  const geoTime = Date.now() - 1 * 24 * 3600 * 1000 + 18 * 3600 * 1000;
+  // 2. Add 9 Compliance Review Transactions (Verdict: REVIEW / SUSPICIOUS - Amber)
+  // 2a. Midnight Off-Hours High-Value Transfers (3:15 AM & 3:45 AM IST)
+  // 3:15 AM IST = 21:45 UTC previous day
+  const midnightTime1 = new Date(Date.now() - 4 * 24 * 3600 * 1000);
+  midnightTime1.setUTCHours(21, 45, 0, 0); // 3:15 AM IST
   rows.push([
-    'TXN_TEMPLATE_GEO_01',
-    new Date(geoTime).toISOString(),
+    'TXN_TEMPLATE_REV_01_MIDNIGHT',
+    midnightTime1.toISOString(),
     senderVpa,
     senderName,
-    'swiggy.orders@icici',
-    'Swiggy Bandra Mumbai',
-    '650',
-    'UPI_P2M',
-    '5812',
-    'Online Food Delivery',
+    'unverified.contractor@sbi',
+    'Rameshwar Yadav (Contractor)',
+    '32000',
+    'UPI_P2P',
+    '0000',
+    'Peer-to-Peer Transfer',
     'Mumbai',
     normalDevice,
     normalIp
   ]);
+
+  const midnightTime2 = new Date(Date.now() - 3 * 24 * 3600 * 1000);
+  midnightTime2.setUTCHours(22, 15, 0, 0); // 3:45 AM IST
   rows.push([
-    'TXN_TEMPLATE_GEO_02',
-    new Date(geoTime + 12 * 60 * 1000).toISOString(), // 12 mins later
+    'TXN_TEMPLATE_REV_02_MIDNIGHT',
+    midnightTime2.toISOString(),
+    senderVpa,
+    senderName,
+    'ananya.newpayee@hdfcbank',
+    'Ananya Sen (Interior Design)',
+    '28500',
+    'UPI_P2P',
+    '0000',
+    'Peer-to-Peer Transfer',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  // 2b. High-Risk MCC Quasi-Cash / Crypto Deposit on Clean Device (MCC 6051)
+  rows.push([
+    'TXN_TEMPLATE_REV_03_MCC6051',
+    new Date(Date.now() - 6 * 24 * 3600 * 1000 + 14 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'wazirx.crypto.inr@kotak',
+    'WazirX Digital Assets Exchange',
+    '26000',
+    'UPI_P2M',
+    '6051',
+    'Quasi-Cash / Crypto Mixers',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  // 2c. High-Risk MCC Precious Stones & Bullion on Clean Device (MCC 5094)
+  rows.push([
+    'TXN_TEMPLATE_REV_04_MCC5094',
+    new Date(Date.now() - 5 * 24 * 3600 * 1000 + 17 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'tanishq.bullion.mumbai@icici',
+    'Tanishq Gold Bullion Counter',
+    '29500',
+    'UPI_P2M',
+    '5094',
+    'Precious Stones, Metals & Jewelry',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  // 2d. Unverified First-Time P2P Payee Transfers
+  rows.push([
+    'TXN_TEMPLATE_REV_05_UNVERIFIED',
+    new Date(Date.now() - 2 * 24 * 3600 * 1000 + 11 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'unverified.freelancer.dev@axisbank',
+    'Kavita Nair (First Time Payee)',
+    '31000',
+    'UPI_P2P',
+    '0000',
+    'Peer-to-Peer Transfer',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  rows.push([
+    'TXN_TEMPLATE_REV_06_NEWPAYEE',
+    new Date(Date.now() - 2 * 24 * 3600 * 1000 + 16 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'newpayee.vendor.hardware@sbi',
+    'Modern Tech Supplies (Unverified)',
+    '33000',
+    'UPI_P2P',
+    '0000',
+    'Peer-to-Peer Transfer',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  // 2e. Velocity Surge Alerts Approaching Limit
+  rows.push([
+    'TXN_TEMPLATE_REV_07_VELOCITY_WARNING',
+    new Date(Date.now() - 1 * 24 * 3600 * 1000 + 10 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'blinkit.express@kotak',
+    'Blinkit Quick Delivery',
+    '12000',
+    'UPI_P2M',
+    '5411',
+    'Supermarket & Groceries',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  rows.push([
+    'TXN_TEMPLATE_REV_08_VELOCITY_WARNING',
+    new Date(Date.now() - 1 * 24 * 3600 * 1000 + 10 * 3600 * 1000 + 40000).toISOString(),
+    senderVpa,
+    senderName,
+    'zepto.speedy@axisbank',
+    'Zepto Flash Delivery',
+    '14500',
+    'UPI_P2M',
+    '5411',
+    'Supermarket & Groceries',
+    'Mumbai',
+    normalDevice,
+    normalIp
+  ]);
+
+  // 2f. Rapid Transit / Geo Warning (Mumbai to Pune ground transit)
+  rows.push([
+    'TXN_TEMPLATE_REV_09_GEO_WARNING',
+    new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
+    senderVpa,
+    senderName,
+    'uber.intercity@icici',
+    'Uber Intercity Mumbai-Pune',
+    '15000',
+    'UPI_P2M',
+    '4121',
+    'Taxicabs & Rideshare',
+    'Pune',
+    normalDevice,
+    normalIp
+  ]);
+
+  // 3. Add 6 Confirmed Multi-Vector Fraud Attacks (Verdict: FRAUD / FLAG - Red)
+  // 3a. Rapid Bot Velocity Burst Attacks (Rooted Emulator + Tor IP)
+  const burstTime = Date.now() - 2 * 24 * 3600 * 1000 + 14 * 3600 * 1000;
+  rows.push([
+    'TXN_TEMPLATE_BURST_01',
+    new Date(burstTime + 5000).toISOString(),
+    senderVpa,
+    senderName,
+    'unknown.merchant_1@paytm',
+    'Rapid Automated Bot Node #1',
+    '18500',
+    'UPI_P2M',
+    '5999',
+    'Miscellaneous Retail',
+    'Mumbai',
+    'ROOTED_GENYMOTION_EMULATOR_FAIL',
+    '185.220.101.5'
+  ]);
+
+  rows.push([
+    'TXN_TEMPLATE_BURST_02',
+    new Date(burstTime + 12000).toISOString(),
+    senderVpa,
+    senderName,
+    'unknown.merchant_2@paytm',
+    'Rapid Automated Bot Node #2',
+    '19500',
+    'UPI_P2M',
+    '5999',
+    'Miscellaneous Retail',
+    'Mumbai',
+    'ROOTED_GENYMOTION_EMULATOR_FAIL',
+    '185.220.101.5'
+  ]);
+
+  // 3b. Impossible Travel Geo-Drift Anomaly (Mumbai to London 7,200 km jump in 12 mins)
+  rows.push([
+    'TXN_TEMPLATE_GEO_FRAUD',
+    new Date(Date.now() - 1 * 24 * 3600 * 1000 + 18 * 3600 * 1000).toISOString(),
     senderVpa,
     senderName,
     'harrods.luxury@barclays',
@@ -275,9 +430,9 @@ export function generateSampleCsvTemplate(): string {
     '82.165.197.1'
   ]);
 
-  // 4. Add 2 High-Risk MCC Online Gambling / Betting Transactions (MCC 7995)
+  // 3c. Illegal Offshore Gambling Syndicate (Bet99 - MCC 7995 on Bluestacks Emulator)
   rows.push([
-    'TXN_TEMPLATE_MCC_01',
+    'TXN_TEMPLATE_MCC_GAMBLING',
     new Date(Date.now() - 36 * 3600 * 1000).toISOString(),
     senderVpa,
     senderName,
@@ -291,23 +446,8 @@ export function generateSampleCsvTemplate(): string {
     'EMULATOR_BLUESTACKS_MAC_CLONE',
     '104.244.42.1'
   ]);
-  rows.push([
-    'TXN_TEMPLATE_MCC_02',
-    new Date(Date.now() - 34 * 3600 * 1000).toISOString(),
-    senderVpa,
-    senderName,
-    'cryptomixer.instant.pay@okaxis',
-    'P2P Quasi-Cash Liquidation',
-    '52000',
-    'UPI_P2P',
-    '6051',
-    'Quasi-Cash / Crypto Mixers',
-    'Mumbai',
-    normalDevice,
-    '103.21.124.8'
-  ]);
 
-  // 5. Add 2 Mule Account Syndicate Funnel Transactions
+  // 3d. Mule Syndicate Liquidation Drains (MCC 6011 Quasi-Cash on Rooted Phone)
   rows.push([
     'TXN_TEMPLATE_MULE_01',
     new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
@@ -323,6 +463,7 @@ export function generateSampleCsvTemplate(): string {
     'ROOTED_ONEPLUS_OX_SPOOF',
     '185.100.87.2'
   ]);
+
   rows.push([
     'TXN_TEMPLATE_MULE_02',
     new Date(Date.now() - 11 * 3600 * 1000).toISOString(),
@@ -339,23 +480,6 @@ export function generateSampleCsvTemplate(): string {
     '185.100.87.2'
   ]);
 
-  // 6. Add 1 Suspicious Late-Night High-Value Transfer
-  rows.push([
-    'TXN_TEMPLATE_SUSPICIOUS_01',
-    new Date(Date.now() - 5 * 3600 * 1000).toISOString(), // 3:30 AM
-    senderVpa,
-    senderName,
-    'firsttime.recipient.unverified@sbi',
-    'Rameshwar Yadav (First Time Recipient)',
-    '34000',
-    'UPI_P2P',
-    '0000',
-    'Peer-to-Peer Transfer',
-    'Mumbai',
-    normalDevice,
-    normalIp
-  ]);
-
-  // Total rows = 90 + 3 + 2 + 2 + 2 + 1 = exactly 100 records!
+  // Exact 100 records: 85 Safe (85%), 9 Review (9%), 6 Fraud (6%)
   return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
 }
