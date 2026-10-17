@@ -1,5 +1,9 @@
 # DronaPay Statement Scanner — Bank Statement Fraud & Risk Engine
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-success?style=for-the-badge&logo=vercel)](https://drona-pay-statement-scanner-tau.vercel.app/)
+
+🌐 **Live Demo:** [https://drona-pay-statement-scanner-tau.vercel.app/](https://drona-pay-statement-scanner-tau.vercel.app/)
+
 A high-performance, real-world Bank Statement & UPI Transaction Fraud Detection platform built specifically for Indian BFSI switches and core banking gateways.
 
 Inspired by **Drona Pay's Acharya** core transaction monitoring system.
